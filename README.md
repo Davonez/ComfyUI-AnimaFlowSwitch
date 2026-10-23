@@ -1,3 +1,5 @@
+[English](README.en.md) ｜ **中文**
+
 # Anima 流程总开关 + 控制网开关
 
 两个「整条支路要不要跑」的懒执行开关，给 ComfyUI 用。只做引用转交：不复制、不转换、
@@ -21,6 +23,7 @@ ComfyUI/
       ├─ __init__.py
       ├─ nodes.py
       ├─ README.md
+      ├─ README.en.md
       ├─ LICENSE
       ├─ pyproject.toml
       └─ tests/
@@ -77,11 +80,11 @@ Anima 正向（65）───────► anima_positive
 
 ---
 
-## 4. 两个一起用：三种「情况」
+## 4. 两个一起用：四种「情况」
 
 ```
-LoRA 模型 ──┬─► [控制网开关].model ──┐
-            └─► [控制网开关].cn_model ┴─► model ──► 65.AnimaArtistCrossAttn ──┐
+LoRA 模型 ──┬─► [控制网开关].model ───┐
+            └─► [控制网开关].cn_model ┴─► model ──► 65.AnimaArtistCrossAttn ────┐
                                                         │                       ├─► [Anima 流程总开关] ─► 采样器
                                      普通正向 ──────────┼─► positive            │
                                      负向 ──────────────┼─► negative            │
