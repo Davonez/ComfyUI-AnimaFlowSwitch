@@ -1,0 +1,23 @@
+[project]
+name = "comfyui-anima-flow-switch"
+version = "1.0.0"
+description = "两个懒执行的流程开关：Anima 混合 / 控制网；跳过时整条支路不执行"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "koivis" }]
+keywords = ["comfyui", "custom-nodes", "switch", "anima", "controlnet", "lazy"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/Davonez/ComfyUI-AnimaFlowSwitch"
+Repository = "https://github.com/Davonez/ComfyUI-AnimaFlowSwitch"
+"Issue Tracker" = "https://github.com/Davonez/ComfyUI-AnimaFlowSwitch/issues"
+
+# ComfyUI Registry 的展示信息（按需补 PublisherId 后即可 comfy node publish）
+[tool.comfy]
+DisplayName = "Anima Flow Switch"
