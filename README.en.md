@@ -11,7 +11,12 @@ in is the exact same object that comes out.
 | **Anima Flow Switch** (Anima 流程总开关, AnimaFlowSwitch) | One dropdown switches `model` / `positive` / `negative` together; when skipped, the Anima branch **does not run at all** |
 | **ControlNet Switch** (控制网开关, ControlNetSwitch) | One dropdown decides whether the model goes through ControlNet first; when skipped, the ControlNet branch **does not run at all** |
 
-> Version 1.0.0 ｜ standard library only ｜ no `comfy` / `torch` dependency, so the unit tests run offline ｜ MIT
+> Version 2.0.0 ｜ English UI + `locales/en` / `locales/zh` ｜ standard library only ｜ no `comfy` / `torch` dependency, so the unit tests run offline ｜ MIT
+>
+> **2.0.0 breaking change:** the mode widget is now `mode` with the values `mix` / `skip`
+> (Anima) and `use` / `skip` (ControlNet), so the UI can be translated. Workflows saved
+> with 1.x need the dropdown re-selected once; values from 1.x are still understood if
+> they reach the node.
 
 ---
 
@@ -49,18 +54,18 @@ Anima negative (optional) ─► anima_negative
                              [Anima Flow Switch]
 ```
 
-| Mode (`模式`) | Model | Positive | Negative | Anima branch |
+| Mode (`mode`) | Model | Positive | Negative | Anima branch |
 |---|---|---|---|---|
-| `不跳过（用 Anima 混合）` ("don't skip — use the Anima mix"), default | `anima_model`, falls back to `model` if empty | `anima_positive`, falls back to `positive` if empty | `anima_negative`, falls back to `negative` if empty | Runs |
-| `跳过（用原始模型）` ("skip — use the original model") | `model` | `positive` | `negative` | **Never runs** |
+| `mix` ("use the Anima mix"), default | `anima_model`, falls back to `model` if empty | `anima_positive`, falls back to `positive` if empty | `anima_negative`, falls back to `negative` if empty | Runs |
+| `skip` ("use the original model") | `model` | `positive` | `negative` | **Never runs** |
 
 * `anima_*` are **lazy inputs** (`lazy` + `check_lazy_status`): in skip mode the engine never even schedules
   that branch — it's not just that the values go unused, the branch is never computed. So with node 65 muted
   and the upstream switch handing over nothing, skipping still renders.
 * Not skipping, but the Anima model input is empty → it automatically falls back to the original model and
   prints one line to the console:
-  `[Anima开关#110] 不跳过，但 Anima 模型那条线是空的（65 被静音了？上游开关交空了？），已回退到原始模型。`
-* Both models empty, or positive/negative not connected at all → it raises a Chinese `ValueError` that spells
+  `[AnimaSwitch#110]: mixing, but the Anima model link is empty (node 65 muted? an upstream switch output nothing?); falling back to the original model.`
+* Both models empty, or positive/negative not connected at all → it raises a clear English `ValueError` that spells
   out which one is missing, instead of letting something downstream blow up on
   `'NoneType' object has no attribute ...`.
 
@@ -74,10 +79,10 @@ ControlNet model (LLLite, etc.) ──► cn_model  ┘
                                     [ControlNet Switch]
 ```
 
-| Mode (`模式`) | Output | ControlNet branch |
+| Mode (`mode`) | Output | ControlNet branch |
 |---|---|---|
-| `不跳过（用控制网）` ("don't skip — use ControlNet") | `cn_model`, falls back to `model` if empty | Runs |
-| `跳过（不用控制网）` ("skip — don't use ControlNet"), default | `model` | **Never runs** |
+| `use` ("use ControlNet") | `cn_model`, falls back to `model` if empty | Runs |
+| `skip` ("don't use ControlNet"), default | `model` | **Never runs** |
 
 Same mechanism as the Anima switch: `cn_model` is a lazy input, so when skipping, not a single Canny /
 image-loading / LLLite node runs; if you don't skip but the ControlNet side is empty (the ControlNet node is
@@ -98,10 +103,10 @@ LoRA model ──┬─► [ControlNet Switch].model ───┐
 
 | ControlNet Switch | Anima Switch | Result |
 |---|---|---|
-| `跳过（不用控制网）` | `跳过（用原始模型）` | The LoRA model goes straight into sampling (neither ControlNet nor Anima runs) |
-| `跳过（不用控制网）` | `不跳过（用 Anima 混合）` | ControlNet is skipped, but the Anima mix still happens |
-| `不跳过（用控制网）` | `跳过（用原始模型）` | ControlNet takes effect, but there's no Anima mix |
-| `不跳过（用控制网）` | `不跳过（用 Anima 混合）` | Everything on |
+| `skip` | `skip` | The LoRA model goes straight into sampling (neither ControlNet nor Anima runs) |
+| `skip` | `mix` | ControlNet is skipped, but the Anima mix still happens |
+| `use` | `skip` | ControlNet takes effect, but there's no Anima mix |
+| `use` | `mix` | Everything on |
 
 The two switches are independent, and no combination ever hands `None` downstream.
 

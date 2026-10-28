@@ -10,7 +10,11 @@
 | **Anima 流程总开关**（AnimaFlowSwitch） | 一个下拉同时切 `model` / `positive` / `negative`，跳过时 Anima 那条支路**完全不执行** |
 | **控制网开关**（ControlNetSwitch） | 一个下拉决定模型要不要先过控制网，跳过时控制网那条支路**完全不执行** |
 
-> 版本 1.0.0 ｜ 仅用标准库 ｜ 不依赖 `comfy` / `torch`，离线也能单测 ｜ MIT
+> 版本 2.0.0 ｜ UI 默认英文 + `locales/en` / `locales/zh` ｜ 仅用标准库 ｜ 不依赖 `comfy` / `torch`，离线也能单测 ｜ MIT
+>
+> **2.0.0 不兼容变更：** 模式控件改名为 `mode`，取值改成 `mix` / `skip`（Anima）和
+> `use` / `skip`（控制网），这样才能走翻译。1.x 存下来的工作流需要把下拉重新选一次；
+> 如果 1.x 的中文值被传进节点，仍然认得。
 
 ---
 
@@ -48,16 +52,16 @@ Anima 正向（65）───────► anima_positive
                          [Anima 流程总开关]
 ```
 
-| 模式 | 模型 | 正向 | 负向 | Anima 支路 |
+| 模式（`mode`） | 模型 | 正向 | 负向 | Anima 支路 |
 |---|---|---|---|---|
-| 不跳过（默认） | `anima_model`，空了回退 `model` | `anima_positive`，空了回退 `positive` | `anima_negative`，空了用 `negative` | 执行 |
-| 跳过 | `model` | `positive` | `negative` | **完全不执行** |
+| `mix`（默认，不跳过） | `anima_model`，空了回退 `model` | `anima_positive`，空了回退 `positive` | `anima_negative`，空了用 `negative` | 执行 |
+| `skip`（跳过） | `model` | `positive` | `negative` | **完全不执行** |
 
 * `anima_*` 是**懒输入**（`lazy` + `check_lazy_status`）：跳过模式下引擎根本不会去排那条支路，
   不光是不用它的值，是连算都不算。所以 65 号节点静音、上游开关交空，跳过依然能出图。
 * 不跳过但 Anima 模型是空的 → 自动回退原始模型，并在控制台打一行
-  `[Anima开关#110] 不跳过，但 Anima 模型那条线是空的（65 被静音了？上游开关交空了？），已回退到原始模型。`
-* 两个模型都空、或正向/负向彻底没接 → 抛中文 `ValueError` 说清缺哪个，而不是让下游崩在
+  `[AnimaSwitch#110]: mixing, but the Anima model link is empty (node 65 muted? an upstream switch output nothing?); falling back to the original model.`
+* 两个模型都空、或正向/负向彻底没接 → 抛英文 `ValueError` 说清缺哪个，而不是让下游崩在
   `'NoneType' object has no attribute ...`。
 
 ---
@@ -70,10 +74,10 @@ Anima 正向（65）───────► anima_positive
                            [控制网开关]
 ```
 
-| 模式 | 输出 | 控制网支路 |
+| 模式（`mode`） | 输出 | 控制网支路 |
 |---|---|---|
-| 不跳过（用控制网） | `cn_model`，空了回退 `model` | 执行 |
-| 跳过（默认） | `model` | **完全不执行** |
+| `use`（用控制网） | `cn_model`，空了回退 `model` | 执行 |
+| `skip`（默认，跳过） | `model` | **完全不执行** |
 
 和 Anima 开关同一套机制：`cn_model` 是懒输入，跳过时 Canny / 取图 / LLLite 一个节点都不会跑；
 不跳过但控制网那路是空的（控制网节点被静音、或者链断了）会回退原始模型并打 warning。
@@ -93,10 +97,10 @@ LoRA 模型 ──┬─► [控制网开关].model ───┐
 
 | 控制网开关 | Anima 开关 | 结果 |
 |---|---|---|
-| 跳过 | 跳过 | LoRA 原始模型直接进采样（控制网、Anima 都不跑） |
-| 跳过 | 不跳过 | 跳过控制网，但仍然做 Anima 混合 |
-| 不跳过 | 跳过 | 控制网生效，但不做 Anima 混合 |
-| 不跳过 | 不跳过 | 全开 |
+| `skip` | `skip` | LoRA 原始模型直接进采样（控制网、Anima 都不跑） |
+| `skip` | `mix` | 跳过控制网，但仍然做 Anima 混合 |
+| `use` | `skip` | 控制网生效，但不做 Anima 混合 |
+| `use` | `mix` | 全开 |
 
 两个开关互相独立，任何组合都不会把 `None` 交给下游。
 
@@ -113,7 +117,7 @@ LoRA 模型 ──┬─► [控制网开关].model ───┐
 
 **Q: 不跳过，但上游是静的/断的，会怎样？**
 回退到原始模型/原始正向，并打一行 warning，不报错、不交空，出图流程不中断。
-只有「连回退都没有」（原始模型和 Anima/控制网模型都空）才报中文错。
+只有「连回退都没有」（原始模型和 Anima/控制网模型都空）才报英文错。
 
 **Q: 和 `ComfyUI-MuteBypassSwitch` 包能一起装吗？**
 能装，但**别同时装**：那个包里也有同名的 `AnimaFlowSwitch` / `ControlNetSwitch`，节点类型会注册两遍。
@@ -134,7 +138,7 @@ python tests\test_controlnet_switch.py     # 37 项
 ```
 
 覆盖：节点定义/注册、模式文案兼容、懒执行请求了哪些输入、执行器两轮模拟（不重复要、不死循环）、
-三条线怎么切、空值回退 + warning、缺输入时的中文报错、对象引用不变。
+三条线怎么切、空值回退 + warning、缺输入时的英文报错、对象引用不变。
 
 真机验证（本机 ComfyUI 8188，2026-10-21）：接进 Anima 工作流后「跳过」46.2s / 「不跳过」28.0s
 两次都成功；跳过那次日志里没有 `[AnimaAdapterMixer]` / `[AnimaCrossAttn]`，说明 65 号节点确实没执行。

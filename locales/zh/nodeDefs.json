@@ -1,0 +1,82 @@
+{
+  "AnimaFlowSwitch": {
+    "display_name": "Anima 流程总开关",
+    "description": "一个下拉当总开关，同时切「model / 正向 / 负向」三条线：\n不跳过 = 用 Anima 混合后的模型和它的正向条件；\n跳过 = 用原始模型 + 普通 CLIPTextEncode 的条件，并且 Anima 那条支路完全不执行。\n不跳过时如果 Anima 模型是空的，会自动回退到原始模型并在控制台说明，不会把空值交给下游。",
+    "inputs": {
+      "mode": {
+        "name": "模式",
+        "tooltip": "不跳过=用 Anima 那条支路的模型和条件；跳过=用原始模型，Anima 支路连执行都不会执行。",
+        "options": {
+          "mix": "不跳过（用 Anima 混合）",
+          "skip": "跳过（用原始模型）"
+        }
+      },
+      "model": {
+        "name": "原始模型",
+        "tooltip": "原始模型：不经过 Anima 混合，跳过时用它。"
+      },
+      "positive": {
+        "name": "原始正向",
+        "tooltip": "原始正向条件：跳过时用它；不跳过时当 Anima 正向没接的兜底。"
+      },
+      "negative": {
+        "name": "负向",
+        "tooltip": "负向条件，两条路共用（没接 Anima 负向时也用它）。"
+      },
+      "anima_model": {
+        "name": "Anima 模型",
+        "tooltip": "Anima 混合后的模型（接 65 号节点的 model 输出）。"
+      },
+      "anima_positive": {
+        "name": "Anima 正向",
+        "tooltip": "Anima 那条的正向条件（接 65 号节点的 base_prompt 输出）。"
+      },
+      "anima_negative": {
+        "name": "Anima 负向",
+        "tooltip": "可选：Anima 那条单独的负向条件；不接就沿用 negative。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "模型",
+        "tooltip": "交给采样器的模型：不跳过=Anima 混合后的，跳过=原始模型。"
+      },
+      "1": {
+        "name": "正向",
+        "tooltip": "正向条件：不跳过=Anima 那条，跳过=原始的。"
+      },
+      "2": {
+        "name": "负向",
+        "tooltip": "负向条件：两条路共用。"
+      }
+    }
+  },
+  "ControlNetSwitch": {
+    "display_name": "控制网开关",
+    "description": "一个下拉决定要不要走控制网：\n不跳过 = 用控制网处理后的模型（cn_model），再接后面的 Anima / 采样；\n跳过 = 直接用原始模型，控制网那一整条支路完全不执行（懒执行）。\n不跳过但控制网模型是空的（控制网节点被静音了？）会自动回退到原始模型并在控制台提示。",
+    "inputs": {
+      "mode": {
+        "name": "模式",
+        "tooltip": "不跳过=模型先过控制网（吃 cn_model）；跳过=直接用原始模型，控制网那条支路连执行都不执行。",
+        "options": {
+          "use": "不跳过（用控制网）",
+          "skip": "跳过（不用控制网）"
+        }
+      },
+      "model": {
+        "name": "原始模型",
+        "tooltip": "原始模型：不经过控制网，跳过时用它。"
+      },
+      "cn_model": {
+        "name": "控制网模型",
+        "tooltip": "控制网处理后的模型（接 LLLite / 控制网应用节点的 MODEL 输出）。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "模型",
+        "tooltip": "交给下一段的模型：不跳过=控制网处理后的，跳过=原始模型。"
+      }
+    }
+  }
+}

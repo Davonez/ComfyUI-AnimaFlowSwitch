@@ -1,0 +1,82 @@
+{
+  "AnimaFlowSwitch": {
+    "display_name": "Anima Flow Switch",
+    "description": "One dropdown acts as a master switch for three links at once - model / positive / negative. Mix = use the Anima-mixed model and its positive conditioning. Skip = use the original model plus a normal CLIPTextEncode conditioning, and the Anima branch is not executed at all. When mixing, an empty Anima model falls back to the original model with a console warning, so None is never passed downstream.",
+    "inputs": {
+      "mode": {
+        "name": "Mode",
+        "tooltip": "Mix = use the model and conditioning from the Anima branch; Skip = use the original model and never execute the Anima branch.",
+        "options": {
+          "mix": "Use Anima mix",
+          "skip": "Skip (original model)"
+        }
+      },
+      "model": {
+        "name": "Model",
+        "tooltip": "Original model: not Anima-mixed. Used when skipping."
+      },
+      "positive": {
+        "name": "Positive",
+        "tooltip": "Original positive conditioning: used when skipping, and as the fallback when the Anima positive is not connected."
+      },
+      "negative": {
+        "name": "Negative",
+        "tooltip": "Negative conditioning, shared by both paths (also used when the Anima negative is not connected)."
+      },
+      "anima_model": {
+        "name": "Anima model",
+        "tooltip": "Anima-mixed model (wire the model output of node 65)."
+      },
+      "anima_positive": {
+        "name": "Anima positive",
+        "tooltip": "Anima positive conditioning (wire the base_prompt output of node 65)."
+      },
+      "anima_negative": {
+        "name": "Anima negative",
+        "tooltip": "Optional: the Anima branch's own negative conditioning; falls back to Negative when not connected."
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "model",
+        "tooltip": "Model handed to the sampler: Anima-mixed when mixing, original when skipping."
+      },
+      "1": {
+        "name": "positive",
+        "tooltip": "Positive conditioning: from the Anima branch when mixing, original when skipping."
+      },
+      "2": {
+        "name": "negative",
+        "tooltip": "Negative conditioning: shared by both paths."
+      }
+    }
+  },
+  "ControlNetSwitch": {
+    "display_name": "ControlNet Switch",
+    "description": "One dropdown decides whether the ControlNet stage runs. Use = take the ControlNet-processed model (cn_model) and feed it to the next stage. Skip = use the original model directly; the whole ControlNet branch is not executed (lazy evaluation). If Use is selected but the ControlNet model is empty (ControlNet node muted?), the node falls back to the original model and says so in the console.",
+    "inputs": {
+      "mode": {
+        "name": "Mode",
+        "tooltip": "Use = the model goes through ControlNet first (cn_model); Skip = use the original model and never execute the ControlNet branch.",
+        "options": {
+          "use": "Use ControlNet",
+          "skip": "Skip (no ControlNet)"
+        }
+      },
+      "model": {
+        "name": "Model",
+        "tooltip": "Original model: not processed by ControlNet. Used when skipping."
+      },
+      "cn_model": {
+        "name": "ControlNet model",
+        "tooltip": "ControlNet-processed model (wire the MODEL output of the LLLite / ControlNet apply node)."
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "model",
+        "tooltip": "Model handed to the next stage: ControlNet-processed when using, original when skipping."
+      }
+    }
+  }
+}
